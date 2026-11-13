@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinalubngan National High School - Online Leave Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        deped: {
+                            navy: '#0f294a',
+                            blue: '#1e40af',
+                            light: '#eff6ff',
+                            gold: '#d97706',
+                            emerald: '#059669'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar & Print Styles */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-slip-area, #print-slip-area * {
+                visibility: visible;
+            }
+            #print-slip-area {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 20px;
+                background: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Custom Confirmation / Details Modal -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden items-center justify-center p-4 transition-opacity">
+        <div id="modal-content" class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all border border-slate-200">
+            <!-- Dynamic Modal Body -->
+        </div>
+    </div>
+
+    <!-- Top Header / Navigation -->
+    <header class="bg-deped-navy text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 sm:h-20">
+                <!-- School Branding -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 shadow-inner">
+                        <i data-lucide="graduation-cap" class="w-6 h-6 sm:w-7 sm:h-7 text-amber-400"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full">DepEd • Leave Portal</span>
+                        </div>
+                        <h1 class="text-sm sm:text-lg font-bold tracking-tight leading-tight">Pinalubngan National High School</h1>
+                        <p class="text-[11px] sm:text-xs text-slate-300 hidden sm:block">Online Faculty & Staff Leave Filing & Tracking System</p>
+                    </div>
+                </div>
+
+                <!-- Active User Info & Logout -->
+                <div id="nav-user-section" class="hidden items-center gap-3">
+                    <div class="text-right hidden md:block">
+                        <p id="nav-user-name" class="text-sm font-semibold text-white leading-none"></p>
+                        <p id="nav-user-role" class="text-xs text-slate-300 mt-1"></p>
+                    </div>
+                    <button onclick="logout()" class="inline-flex items-center gap-1.5 bg-white/10 hover:bg-rose-600 text-white text-xs sm:text-sm font-medium px-3 py-2 rounded-xl border border-white/15 transition-colors cursor-pointer">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- ==================== 1. LOGIN SCREEN ==================== -->
+        <section id="login-view" class="max-w-4xl mx-auto my-2 sm:my-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden">
+                
+                <!-- Left Banner Panel -->
+                <div class="lg:col-span-5 bg-gradient-to-br from-deped-navy via-blue-900 to-slate-900 text-white p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
+                    <div class="absolute -left-10 -top-10 w-40 h-40 bg-amber-400/10 rounded-full blur-2xl"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-xs font-medium mb-4">
+                            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                            <span>Official School Leave System</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-3">Welcome, Educators & Staff!</h2>
+                        <p class="text-sm text-slate-300 leading-relaxed mb-6">
+                            File, monitor, and manage your Wellness, Maternity, and Paternity Leave applications conveniently online.
+                        </p>
+
+                        <!-- Leave Rules Quick Guide -->
+                        <div class="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-4 text-xs">
+                            <p class="font-semibold text-amber-300 uppercase tracking-wider text-[11px]">Leave Guidelines & Quotas</p>
+                            <div class="flex items-start gap-2.5">
+                                <i data-lucide="heart-pulse" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold text-white">Wellness Leave (5 Days):</span>
+                                    <span class="text-slate-300"> 1 day, 2 days straight, or 3 days straight. Max <strong>2 teachers per date</strong>.</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <i data-lucide="baby" class="w-4 h-4 text-pink-400 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold text-white">Maternity Leave (105 Days):</span>
+                                    <span class="text-slate-300"> Exclusive for Female personnel.</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <i data-lucide="user-check" class="w-4 h-4 text-sky-400 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-semibold text-white">Paternity Leave (7 Days):</span>
+                                    <span class="text-slate-300"> Exclusive for Male personnel.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative z-10 mt-8 pt-4 border-t border-white/10">
+                        <p class="text-[11px] text-slate-400 uppercase tracking-wider">Designated Approving Authority</p>
+                        <p class="text-sm font-bold text-white mt-0.5">Kenneth Joseph V. De Los Santos</p>
+                        <p class="text-xs text-amber-300">School Head • Pinalubngan NHS</p>
+                    </div>
+                </div>
+
+                <!-- Right Login Form Panel -->
+                <div class="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-center">
+                    <!-- Login Mode Switcher -->
+                    <div class="flex p-1 bg-slate-100 rounded-xl mb-6 border border-slate-200">
+                        <button type="button" id="tab-teacher-login" onclick="switchLoginTab('teacher')" class="flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-deped-navy shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                            <span>Employee / Teacher Login</span>
+                        </button>
+                        <button type="button" id="tab-approver-login" onclick="switchLoginTab('approver')" class="flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i data-lucide="award" class="w-4 h-4"></i>
+                            <span>School Head Approver</span>
+                        </button>
+                    </div>
+
+                    <!-- Teacher Login Form -->
+                    <form id="teacher-login-form" onsubmit="handleTeacherLogin(event)" class="space-y-5">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Employee Sign In</h3>
+                            <p class="text-sm text-slate-500 mt-1">Enter your 7-digit DepEd Employee Number to access your leave portal.</p>
+                        </div>
+
+                        <div>
+                            <label for="emp-number-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">Employee Number</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <i data-lucide="hash" class="w-5 h-5 text-slate-400"></i>
+                                </div>
+                                <input type="text" id="emp-number-input" placeholder="e.g., 6099854" required
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-semibold tracking-wide focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition">
+                            </div>
+                        </div>
+
+                        <!-- Quick Select Directory Helper -->
+                        <div>
+                            <label for="emp-quick-select" class="block text-xs font-medium text-slate-500 mb-1.5">Or select your name from the PNHS Faculty Directory:</label>
+                            <select id="emp-quick-select" onchange="document.getElementById('emp-number-input').value = this.value"
+                                class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                                <option value="">-- Choose Employee Name --</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 px-4 bg-deped-navy hover:bg-blue-900 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <span>Access My Leave Dashboard</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+
+                    <!-- School Head Approver Login Form -->
+                    <form id="approver-login-form" onsubmit="handleApproverLogin(event)" class="space-y-5 hidden">
+                        <div>
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200 text-xs font-semibold mb-2">
+                                <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                                <span>Approver Portal</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900">School Head Sign In</h3>
+                            <p class="text-sm text-slate-500 mt-1">Review, approve, or manage faculty leave applications.</p>
+                        </div>
+
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-deped-navy text-white flex items-center justify-center font-bold text-lg shrink-0">
+                                KJ
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-900">Kenneth Joseph V. De Los Santos</p>
+                                <p class="text-xs font-medium text-blue-700">School Head • Approving Officer</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="approver-code-input" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">Approver Access ID / Passcode</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                                </div>
+                                <input type="text" id="approver-code-input" value="HEAD" placeholder="Enter HEAD or ADMIN" required
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition">
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-1.5">Default access code is pre-filled (<code class="font-mono text-slate-600">HEAD</code>) for immediate access.</p>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl shadow-lg shadow-amber-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                            <span>Sign In as School Head</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. TEACHER DASHBOARD ==================== -->
+        <section id="teacher-view" class="hidden space-y-6">
+            
+            <!-- Profile & Leave Credits Summary Banner -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <!-- Teacher Profile Info -->
+                    <div class="flex items-start sm:items-center gap-4">
+                        <div id="teacher-avatar" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-deped-navy to-blue-700 text-white flex items-center justify-center font-bold text-xl sm:text-2xl shadow-md shrink-0">
+                            RJ
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span id="teacher-emp-badge" class="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-xs font-mono font-bold">ID: 6099854</span>
+                                <span id="teacher-pos-badge" class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-semibold">TEACHER I</span>
+                                <span id="teacher-gender-badge" class="px-2.5 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium">Female</span>
+                            </div>
+                            <h2 id="teacher-full-name" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1.5">Rhea Jane Narciso Agdol</h2>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Approver: <span class="font-semibold text-slate-700">Kenneth Joseph V. De Los Santos</span> (School Head)</p>
+                        </div>
+                    </div>
+
+                    <!-- Leave Credit Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:w-auto">
+                        <!-- Wellness Leave Balance -->
+                        <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 min-w-[210px]">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-emerald-800">Wellness Leave</span>
+                                <i data-lucide="heart-pulse" class="w-4 h-4 text-emerald-600"></i>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-1.5">
+                                <span id="wellness-remaining-count" class="text-3xl font-extrabold text-emerald-700">5</span>
+                                <span class="text-xs font-medium text-emerald-700">/ 5 days available</span>
+                            </div>
+                            <p id="wellness-used-note" class="text-[11px] text-emerald-600 mt-1">0 days used or pending</p>
+                        </div>
+
+                        <!-- Gender-Specific Special Leave Balance -->
+                        <div id="special-leave-card" class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-4 min-w-[210px]">
+                            <div class="flex items-center justify-between">
+                                <span id="special-leave-title" class="text-xs font-bold uppercase tracking-wider text-indigo-800">Maternity Leave</span>
+                                <i data-lucide="baby" class="w-4 h-4 text-indigo-600"></i>
+                            </div>
+                            <div class="mt-2 flex items-baseline gap-1.5">
+                                <span id="special-leave-days" class="text-3xl font-extrabold text-indigo-700">105</span>
+                                <span class="text-xs font-medium text-indigo-700">days allocation</span>
+                            </div>
+                            <p id="special-leave-status" class="text-[11px] text-indigo-600 mt-1">Eligible (Female Personnel)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Two-Column Grid: Filing Form + School Wellness Calendar -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Column: File Leave Form -->
+                <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                    <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                            <i data-lucide="file-plus-2" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">File a Leave Application</h3>
+                            <p class="text-xs text-slate-500">Complete the details below to submit to the School Head.</p>
+                        </div>
+                    </div>
+
+                    <form id="leave-filing-form" onsubmit="submitLeaveApplication(event)" class="mt-5 space-y-5">
+                        <!-- Leave Category -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">1. Select Leave Category</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="leave-type-options">
+                                <!-- Populated dynamically based on teacher gender -->
+                            </div>
+                        </div>
+
+                        <!-- Wellness Duration Selector (Shown only when Wellness Leave is selected) -->
+                        <div id="wellness-duration-group">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">2. Wellness Leave Duration Pattern</label>
+                            <div class="grid grid-cols-3 gap-2.5">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="wellnessDays" value="1" checked onchange="updateDatePreview()" class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-600 peer-checked:text-emerald-800 transition">
+                                        <p class="text-sm font-bold">1 Day</p>
+                                        <p class="text-[11px] text-slate-500 peer-checked:text-emerald-700">Specific Date</p>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="wellnessDays" value="2" onchange="updateDatePreview()" class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-600 peer-checked:text-emerald-800 transition">
+                                        <p class="text-sm font-bold">2 Days</p>
+                                        <p class="text-[11px] text-slate-500 peer-checked:text-emerald-700">Straight</p>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="wellnessDays" value="3" onchange="updateDatePreview()" class="peer sr-only">
+                                    <div class="p-3 text-center rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-emerald-50 peer-checked:border-emerald-600 peer-checked:text-emerald-800 transition">
+                                        <p class="text-sm font-bold">3 Days</p>
+                                        <p class="text-[11px] text-slate-500 peer-checked:text-emerald-700">Straight</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Start Date Picker -->
+                        <div>
+                            <label for="leave-start-date" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">3. Inclusive Start Date</label>
+                            <input type="date" id="leave-start-date" required onchange="updateDatePreview()"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+
+                        <!-- Live Date Range & Daily Slot Availability Checker -->
+                        <div id="date-preview-box" class="hidden rounded-xl border p-4 space-y-2.5 transition-all">
+                            <!-- Filled dynamically by updateDatePreview() -->
+                        </div>
+
+                        <!-- Optional Remarks -->
+                        <div>
+                            <label for="leave-remarks" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">4. Purpose / Remarks <span class="text-slate-400 font-normal">(Optional)</span></label>
+                            <textarea id="leave-remarks" rows="2" placeholder="e.g., Personal wellness rest, medical check-up, family matter..."
+                                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"></textarea>
+                        </div>
+
+                        <!-- Approver Read-Only Box -->
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                            <span class="text-slate-500">Recommending & Approving Official:</span>
+                            <span class="font-bold text-slate-800">Kenneth Joseph V. De Los Santos (School Head)</span>
+                        </div>
+
+                        <button type="submit" id="submit-leave-btn" class="w-full py-3.5 px-5 bg-deped-navy hover:bg-blue-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>Submit Leave Application</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right Column: Wellness Leave Daily Slot Monitor (Calendar) -->
+                <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                                    <i data-lucide="calendar-days" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-slate-900">Wellness Leave Daily Slot Monitor</h3>
+                                    <p class="text-xs text-slate-500">Max <strong>2 teachers</strong> allowed per date across the school.</p>
+                                </div>
+                            </div>
+                            <!-- Month Navigation -->
+                            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                                <button type="button" onclick="changeCalendarMonth(-1)" class="p-1.5 hover:bg-white rounded-lg text-slate-700 transition cursor-pointer" title="Previous Month">
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </button>
+                                <span id="calendar-month-label" class="text-xs font-bold text-slate-800 px-2 min-w-[115px] text-center">November 2026</span>
+                                <button type="button" onclick="changeCalendarMonth(1)" class="p-1.5 hover:bg-white rounded-lg text-slate-700 transition cursor-pointer" title="Next Month">
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Legend -->
+                        <div class="flex flex-wrap items-center gap-4 my-3 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300 inline-block"></span>
+                                <span class="text-slate-600">0/2 Open</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-sm bg-amber-100 border border-amber-400 inline-block"></span>
+                                <span class="text-amber-800 font-medium">1/2 Taken (1 Slot Left)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-sm bg-rose-100 border border-rose-400 inline-block"></span>
+                                <span class="text-rose-800 font-medium">2/2 FULL (Closed)</span>
+                            </div>
+                        </div>
+
+                        <!-- Calendar Grid Header -->
+                        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 uppercase py-1">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        </div>
+                        <!-- Calendar Days -->
+                        <div id="wellness-calendar-grid" class="grid grid-cols-7 gap-1.5 mt-1">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Selected Day Inspector -->
+                    <div id="calendar-day-detail" class="mt-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+                        <p class="font-semibold text-slate-700">Click any date on the calendar to inspect scheduled teachers or auto-fill your Start Date.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Leave Applications History Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">My Leave Applications</h3>
+                        <p class="text-xs text-slate-500">You may cancel/delete your application if you wish to free up your dates and leave credits.</p>
+                    </div>
+                    <span id="my-apps-count-badge" class="self-start sm:self-auto px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">0 Applications</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                <th class="py-3.5 px-4 sm:px-6">Leave Category</th>
+                                <th class="py-3.5 px-4">Inclusive Dates</th>
+                                <th class="py-3.5 px-4 text-center">Days</th>
+                                <th class="py-3.5 px-4">Approver</th>
+                                <th class="py-3.5 px-4">Status</th>
+                                <th class="py-3.5 px-4 sm:px-6 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="my-applications-tbody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. SCHOOL HEAD (APPROVER) DASHBOARD ==================== -->
+        <section id="approver-view" class="hidden space-y-6">
+            
+            <!-- Approver Header Banner -->
+            <div class="bg-gradient-to-r from-deped-navy to-blue-900 text-white rounded-2xl p-6 shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-xs font-semibold mb-2">
+                        <i data-lucide="award" class="w-3.5 h-3.5"></i>
+                        <span>Approving Authority Dashboard</span>
+                    </div>
+                    <h2 class="text-2xl font-extrabold tracking-tight">Kenneth Joseph V. De Los Santos</h2>
+                    <p class="text-sm text-blue-200">School Head • Pinalubngan National High School</p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="switchApproverSubtab('applications')" id="subtab-btn-apps" class="px-4 py-2.5 rounded-xl bg-white text-deped-navy font-semibold text-xs sm:text-sm shadow-sm transition cursor-pointer">
+                        Leave Applications
+                    </button>
+                    <button onclick="switchApproverSubtab('roster')" id="subtab-btn-roster" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm transition cursor-pointer">
+                        Faculty Roster & Balances (20)
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-bold uppercase tracking-wider">Total Filed</span>
+                        <i data-lucide="files" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+                    <p id="stat-total-apps" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">0</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-amber-700">
+                        <span class="text-xs font-bold uppercase tracking-wider">Pending Review</span>
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+                    </div>
+                    <p id="stat-pending-apps" class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-2">0</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-emerald-700">
+                        <span class="text-xs font-bold uppercase tracking-wider">Approved</span>
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                    </div>
+                    <p id="stat-approved-apps" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-2">0</p>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between text-indigo-700">
+                        <span class="text-xs font-bold uppercase tracking-wider">Faculty Count</span>
+                        <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+                    </div>
+                    <p class="text-2xl sm:text-3xl font-extrabold text-indigo-600 mt-2">20</p>
+                </div>
+            </div>
+
+            <!-- SUBTAB A: ALL LEAVE APPLICATIONS -->
+            <div id="approver-applications-panel" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Faculty & Staff Leave Applications</h3>
+                        <p class="text-xs text-slate-500">Review inclusive dates, verify 2-teachers-per-day Wellness cap, and take action.</p>
+                    </div>
+                    <!-- Filter Pills -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="approver-status-filter" onchange="renderApproverDashboard()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none">
+                            <option value="ALL">All Statuses</option>
+                            <option value="Pending">Pending Only</option>
+                            <option value="Approved">Approved Only</option>
+                            <option value="Rejected">Rejected Only</option>
+                        </select>
+                        <select id="approver-type-filter" onchange="renderApproverDashboard()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none">
+                            <option value="ALL">All Leave Types</option>
+                            <option value="Wellness Leave">Wellness Leave</option>
+                            <option value="Maternity Leave">Maternity Leave</option>
+                            <option value="Paternity Leave">Paternity Leave</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                <th class="py-3.5 px-4 sm:px-6">Employee</th>
+                                <th class="py-3.5 px-4">Leave Type</th>
+                                <th class="py-3.5 px-4">Inclusive Dates</th>
+                                <th class="py-3.5 px-4 text-center">Days</th>
+                                <th class="py-3.5 px-4">Status</th>
+                                <th class="py-3.5 px-4 sm:px-6 text-right">Approver Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approver-applications-tbody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SUBTAB B: FACULTY ROSTER & BALANCES -->
+            <div id="approver-roster-panel" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Pinalubngan NHS Personnel Leave Credits</h3>
+                        <p class="text-xs text-slate-500">Complete roster of 20 teaching and non-teaching personnel with live Wellness Leave balances.</p>
+                    </div>
+                    <input type="text" id="roster-search-input" onkeyup="renderApproverRoster()" placeholder="Search name or employee no..."
+                        class="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                                <th class="py-3.5 px-4 sm:px-6">Emp. No.</th>
+                                <th class="py-3.5 px-4">Name</th>
+                                <th class="py-3.5 px-4">Position</th>
+                                <th class="py-3.5 px-4">Gender</th>
+                                <th class="py-3.5 px-4 text-center">Wellness Used</th>
+                                <th class="py-3.5 px-4 text-center">Wellness Remaining</th>
+                                <th class="py-3.5 px-4 sm:px-6">Special Leave Eligibility</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approver-roster-tbody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-5 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <p>© 2026 <strong>Pinalubngan National High School</strong> • Leave Filing & Tracking System</p>
+            <div class="flex items-center gap-4">
+                <span>Approver: <strong>Kenneth Joseph V. De Los Santos</strong> (School Head)</span>
+                <button onclick="confirmResetDemoData()" class="text-slate-400 hover:text-rose-600 underline transition cursor-pointer">Reset Sample Data</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // 1. MASTER EMPLOYEE ROSTER (Exact details provided)
+        const EMPLOYEES = [
+            { empNo: '6099854', position: 'TEACHER I', lastName: 'AGDOL', firstName: 'RHEA JANE', middleName: 'NARCISO', gender: 'Female' },
+            { empNo: '6099825', position: 'TEACHER I', lastName: 'AMANTE', firstName: 'APRIL JOY', middleName: 'ABUSO', gender: 'Female' },
+            { empNo: '6092773', position: 'TEACHER I', lastName: 'ARBOLADO', firstName: 'REY', middleName: 'BADON', gender: 'Male' },
+            { empNo: '6066990', position: 'MASTER TEACHER 1', lastName: 'BELLO', firstName: 'ARDIANO', middleName: 'EMPENADO', gender: 'Male' },
+            { empNo: '6077205', position: 'TEACHER I', lastName: 'BOMEDIANO', firstName: 'ELVIRA', middleName: 'PAJO', gender: 'Female' },
+            { empNo: '6097795', position: 'TEACHER I', lastName: 'DE LA CRUZ', firstName: 'JERIC', middleName: 'BACAY', gender: 'Male' },
+            { empNo: '6073032', position: 'TEACHER III', lastName: 'GIRASOL', firstName: 'NANETTE', middleName: 'TORRES', gender: 'Female' },
+            { empNo: '6099801', position: 'TEACHER I', lastName: 'GONZALES', firstName: 'MARY CRISELDA', middleName: 'BARABAS', gender: 'Female' },
+            { empNo: '6113960', position: 'ADMINISTRATIVE OFFICER II', lastName: 'MANILA', firstName: 'IAN CHRISTIAN', middleName: 'DAGLE', gender: 'Male' },
+            { empNo: '6073605', position: 'TEACHER 1', lastName: 'NAMONGCALE', firstName: 'RONNEL', middleName: 'TORRES', gender: 'Male' },
+            { empNo: '6099669', position: 'TEACHER 1', lastName: 'OLIS', firstName: 'OLIS', middleName: 'VAILOCES', gender: 'Male' },
+            { empNo: '6079173', position: 'TEACHER I', lastName: 'PALUMPA', firstName: 'JAZIE FAME MARIE', middleName: 'VENDIOLA', gender: 'Female' },
+            { empNo: '6099909', position: 'TEACHER I', lastName: 'REYES', firstName: 'JUDY ANN', middleName: 'DEDELES', gender: 'Female' },
+            { empNo: '3032611', position: 'TEACHER I', lastName: 'SALCEDO', firstName: 'MAE FLOR', middleName: 'TULBO', gender: 'Female' },
+            { empNo: '6075956', position: 'TEACHER III', lastName: 'VILLACAMPA', firstName: 'SARAH JEAN', middleName: 'CADONDOY', gender: 'Female' },
+            { empNo: '6107123', position: 'TEACHER II', lastName: 'FERNANDEZ', firstName: 'RHEA', middleName: 'CATUBIG', gender: 'Female' },
+            { empNo: '6099921', position: 'TEACHER II', lastName: 'DINULAN', firstName: 'MARICON', middleName: 'PEÑA', gender: 'Female' },
+            { empNo: '4543070', position: 'TEACHER II', lastName: 'BELLO', firstName: 'TEFANE', middleName: 'PAUG', gender: 'Female' },
+            { empNo: '6097726', position: 'TEACHER II', lastName: 'PAO', firstName: 'ZERLAN', middleName: 'MARTINEZ', gender: 'Male' },
+            { empNo: '6097767', position: 'TEACHER II', lastName: 'GABUTERO', firstName: 'ARGIE', middleName: 'ARIOLA', gender: 'Male' }
+        ];
+
+        const APPROVER = {
+            name: 'Kenneth Joseph V. De Los Santos',
+            title: 'School Head'
+        };
+
+        const STORAGE_KEY = 'pnhs_leave_applications_v1';
+
+        // Application State
+        let applications = [];
+        let currentUser = null; // { role: 'teacher' | 'approver', empNo?: string }
+        let calendarYear = 2026;
+        let calendarMonth = 10; // November (0-indexed: 10 = November)
+
+        // Helper: Format Full Name
+        function getFullName(emp) {
+            return `${emp.firstName} ${emp.middleName ? emp.middleName.charAt(0) + '. ' : ''}${emp.lastName}`;
+        }
+
+        function getFormalName(emp) {
+            return `${emp.lastName}, ${emp.firstName} ${emp.middleName}`;
+        }
+
+        // Helper: Format Date YYYY-MM-DD in local time
+        function toISODate(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        // Helper: Parse YYYY-MM-DD safely
+        function parseISODate(isoStr) {
+            const [y, m, d] = isoStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        // Helper: Readable Date (e.g., Nov 16, 2026)
+        function formatDisplayDate(isoStr) {
+            const dt = parseISODate(isoStr);
+            return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Helper: Generate array of consecutive YYYY-MM-DD dates from startDate + numDays
+        function generateDateRange(startIso, numDays) {
+            const dates = [];
+            const base = parseISODate(startIso);
+            for (let i = 0; i < numDays; i++) {
+                const next = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+                dates.push(toISODate(next));
+            }
+            return dates;
+        }
+
+        // Initialize Default Sample Data so the 2-teachers-per-day cap can be seen immediately
+        function getSeedApplications() {
+            return [
+                {
+                    id: 'APP-1001',
+                    empNo: '6099854',
+                    leaveType: 'Wellness Leave',
+                    days: 2,
+                    startDate: '2026-11-16',
+                    endDate: '2026-11-17',
+                    datesCovered: ['2026-11-16', '2026-11-17'],
+                    remarks: 'Scheduled wellness check and rest.',
+                    status: 'Approved',
+                    filedAt: '2026-11-10'
+                },
+                {
+                    id: 'APP-1002',
+                    empNo: '6092773',
+                    leaveType: 'Wellness Leave',
+                    days: 1,
+                    startDate: '2026-11-16',
+                    endDate: '2026-11-16',
+                    datesCovered: ['2026-11-16'],
+                    remarks: 'Personal wellness day.',
+                    status: 'Approved',
+                    filedAt: '2026-11-11'
+                },
+                {
+                    id: 'APP-1003',
+                    empNo: '6073032',
+                    leaveType: 'Wellness Leave',
+                    days: 3,
+                    startDate: '2026-11-23',
+                    endDate: '2026-11-25',
+                    datesCovered: ['2026-11-23', '2026-11-24', '2026-11-25'],
+                    remarks: '3-day wellness recuperation.',
+                    status: 'Pending',
+                    filedAt: '2026-11-12'
+                }
+            ];
+        }
+
+        function loadApplications() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    applications = JSON.parse(saved);
+                } catch (e) {
+                    applications = getSeedApplications();
+                    saveApplications();
+                }
+            } else {
+                applications = getSeedApplications();
+                saveApplications();
+            }
+        }
+
+        function saveApplications() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+        }
+
+        // Calculate Wellness Leave Credits for a specific employee (Pending + Approved count against 5-day quota)
+        function getWellnessCredits(empNo) {
+            const activeWellness = applications.filter(
+                a => a.empNo === empNo && a.leaveType === 'Wellness Leave' && a.status !== 'Rejected'
+            );
+            const used = activeWellness.reduce((sum, a) => sum + a.days, 0);
+            return {
+                total: 5,
+                used: used,
+                remaining: Math.max(0, 5 - used)
+            };
+        }
+
+        // Get all active (Pending or Approved) Wellness Leave bookings on a specific YYYY-MM-DD date
+        function getWellnessBookingsForDate(isoDate) {
+            return applications.filter(
+                a => a.leaveType === 'Wellness Leave' &&
+                     a.status !== 'Rejected' &&
+                     a.datesCovered.includes(isoDate)
+            );
+        }
+
+        // Populate Quick-Select Dropdown on Login Screen
+        function populateLoginDirectory() {
+            const select = document.getElementById('emp-quick-select');
+            const sorted = [...EMPLOYEES].sort((a, b) => a.lastName.localeCompare(b.lastName));
+            sorted.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp.empNo;
+                opt.textContent = `${emp.lastName}, ${emp.firstName} (${emp.empNo} • ${emp.position})`;
+                select.appendChild(opt);
+            });
+        }
+
+        // Login Tabs Switcher
+        function switchLoginTab(tab) {
+            const teacherTab = document.getElementById('tab-teacher-login');
+            const approverTab = document.getElementById('tab-approver-login');
+            const teacherForm = document.getElementById('teacher-login-form');
+            const approverForm = document.getElementById('approver-login-form');
+
+            if (tab === 'teacher') {
+                teacherTab.className = 'flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-deped-navy shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer';
+                approverTab.className = 'flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer';
+                teacherForm.classList.remove('hidden');
+                approverForm.classList.add('hidden');
+            } else {
+                approverTab.className = 'flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-white text-amber-700 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer';
+                teacherTab.className = 'flex-1 py-2.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-2 cursor-pointer';
+                approverForm.classList.remove('hidden');
+                teacherForm.classList.add('hidden');
+            }
+        }
+
+        // Handle Teacher Login
+        function handleTeacherLogin(e) {
+            e.preventDefault();
+            const rawInput = document.getElementById('emp-number-input').value.trim();
+            const emp = EMPLOYEES.find(item => item.empNo === rawInput);
+
+            if (!emp) {
+                showToast('Invalid Employee Number. Please check your 7-digit ID or select from the list.', 'error');
+                return;
+            }
+
+            currentUser = { role: 'teacher', empNo: emp.empNo };
+            showToast(`Welcome back, ${emp.firstName}!`, 'success');
+            renderApp();
+        }
+
+        // Handle Approver Login
+        function handleApproverLogin(e) {
+            e.preventDefault();
+            const code = document.getElementById('approver-code-input').value.trim().toUpperCase();
+            if (code !== 'HEAD' && code !== 'ADMIN' && code !== 'KENNETH') {
+                showToast('Invalid Approver Access Code. Use HEAD or ADMIN.', 'error');
+                return;
+            }
+            currentUser = { role: 'approver' };
+            showToast(`Signed in as ${APPROVER.name} (${APPROVER.title})`, 'success');
+            renderApp();
+        }
+
+        function logout() {
+            currentUser = null;
+            renderApp();
+            showToast('You have been signed out.', 'info');
+        }
+
+        // Master Render Controller
+        function renderApp() {
+            const loginView = document.getElementById('login-view');
+            const teacherView = document.getElementById('teacher-view');
+            const approverView = document.getElementById('approver-view');
+            const navUserSection = document.getElementById('nav-user-section');
+
+            loginView.classList.add('hidden');
+            teacherView.classList.add('hidden');
+            approverView.classList.add('hidden');
+
+            if (!currentUser) {
+                loginView.classList.remove('hidden');
+                navUserSection.classList.add('hidden');
+                navUserSection.classList.remove('flex');
+            } else if (currentUser.role === 'teacher') {
+                const emp = EMPLOYEES.find(e => e.empNo === currentUser.empNo);
+                navUserSection.classList.remove('hidden');
+                navUserSection.classList.add('flex');
+                document.getElementById('nav-user-name').textContent = getFullName(emp);
+                document.getElementById('nav-user-role').textContent = `${emp.position} • ID: ${emp.empNo}`;
+
+                teacherView.classList.remove('hidden');
+                renderTeacherDashboard(emp);
+            } else if (currentUser.role === 'approver') {
+                navUserSection.classList.remove('hidden');
+                navUserSection.classList.add('flex');
+                document.getElementById('nav-user-name').textContent = APPROVER.name;
+                document.getElementById('nav-user-role').textContent = `${APPROVER.title} • Approver`;
+
+                approverView.classList.remove('hidden');
+                renderApproverDashboard();
+            }
+            lucide.createIcons();
+        }
+
+        // ==================== TEACHER DASHBOARD RENDERING ====================
+        function renderTeacherDashboard(emp) {
+            // 1. Profile Header
+            const initials = `${emp.firstName.charAt(0)}${emp.lastName.charAt(0)}`;
+            document.getElementById('teacher-avatar').textContent = initials;
+            document.getElementById('teacher-emp-badge').textContent = `ID: ${emp.empNo}`;
+            document.getElementById('teacher-pos-badge').textContent = emp.position;
+            document.getElementById('teacher-gender-badge').textContent = emp.gender;
+            document.getElementById('teacher-full-name').textContent = getFormalName(emp);
+
+            // 2. Wellness Credits Card
+            const wellness = getWellnessCredits(emp.empNo);
+            document.getElementById('wellness-remaining-count').textContent = wellness.remaining;
+            document.getElementById('wellness-used-note').textContent = `${wellness.used} day(s) used or pending`;
+
+            // 3. Special Leave Card (Maternity for Female 105 days / Paternity for Male 7 days)
+            const specialTitle = document.getElementById('special-leave-title');
+            const specialDays = document.getElementById('special-leave-days');
+            const specialStatus = document.getElementById('special-leave-status');
+
+            if (emp.gender === 'Female') {
+                specialTitle.textContent = 'Maternity Leave';
+                specialDays.textContent = '105';
+                specialStatus.textContent = 'Eligible (Female Personnel)';
+            } else {
+                specialTitle.textContent = 'Paternity Leave';
+                specialDays.textContent = '7';
+                specialStatus.textContent = 'Eligible (Male Personnel)';
+            }
+
+            // 4. Leave Type Radio Cards in Filing Form
+            const leaveTypeContainer = document.getElementById('leave-type-options');
+            const specialLeaveName = emp.gender === 'Female' ? 'Maternity Leave' : 'Paternity Leave';
+            const specialLeaveCount = emp.gender === 'Female' ? 105 : 7;
+
+            leaveTypeContainer.innerHTML = `
+                <label class="cursor-pointer">
+                    <input type="radio" name="leaveType" value="Wellness Leave" checked onchange="handleLeaveTypeChange()" class="peer sr-only">
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-blue-50 peer-checked:border-blue-600 peer-checked:text-blue-900 transition h-full">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-bold">Wellness Leave</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">${wellness.remaining} left</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">1, 2, or 3 days straight (Max 2 teachers/day)</p>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="leaveType" value="${specialLeaveName}" onchange="handleLeaveTypeChange()" class="peer sr-only">
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 peer-checked:bg-indigo-50 peer-checked:border-indigo-600 peer-checked:text-indigo-900 transition h-full">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-bold">${specialLeaveName}</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">${specialLeaveCount} days</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">For ${emp.gender} personnel (${specialLeaveCount} consecutive days)</p>
+                    </div>
+                </label>
+            `;
+
+            handleLeaveTypeChange();
+            renderWellnessCalendar();
+            renderMyApplicationsTable(emp.empNo);
+        }
+
+        function handleLeaveTypeChange() {
+            const selectedType = document.querySelector('input[name="leaveType"]:checked')?.value || 'Wellness Leave';
+            const wellnessGroup = document.getElementById('wellness-duration-group');
+            if (selectedType === 'Wellness Leave') {
+                wellnessGroup.classList.remove('hidden');
+            } else {
+                wellnessGroup.classList.add('hidden');
+            }
+            updateDatePreview();
+        }
+
+        // Live Validation & Slot Preview when choosing Start Date or Duration
+        function updateDatePreview() {
+            const emp = EMPLOYEES.find(e => e.empNo === currentUser.empNo);
+            const leaveType = document.querySelector('input[name="leaveType"]:checked')?.value || 'Wellness Leave';
+            const startDate = document.getElementById('leave-start-date').value;
+            const previewBox = document.getElementById('date-preview-box');
+            const submitBtn = document.getElementById('submit-leave-btn');
+
+            if (!startDate) {
+                previewBox.classList.add('hidden');
+                return;
+            }
+
+            let numDays = 1;
+            if (leaveType === 'Wellness Leave') {
+                numDays = parseInt(document.querySelector('input[name="wellnessDays"]:checked')?.value || '1', 10);
+            } else if (leaveType === 'Maternity Leave') {
+                numDays = 105;
+            } else if (leaveType === 'Paternity Leave') {
+                numDays = 7;
+            }
+
+            const datesCovered = generateDateRange(startDate, numDays);
+            const endDate = datesCovered[datesCovered.length - 1];
+
+            previewBox.classList.remove('hidden');
+
+            // Validation Checks
+            let hasBlockingError = false;
+            let messagesHtml = '';
+
+            if (leaveType === 'Wellness Leave') {
+                const wellness = getWellnessCredits(emp.empNo);
+                if (numDays > wellness.remaining) {
+                    hasBlockingError = true;
+                    messagesHtml += `
+                        <div class="flex items-start gap-2 text-rose-700 text-xs font-semibold">
+                            <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                            <span>Insufficient Wellness Leave balance! You only have <strong>${wellness.remaining} day(s)</strong> remaining.</span>
+                        </div>
+                    `;
+                }
+
+                // Check each date against the 2-teachers-per-day cap AND duplicate self-filing
+                const dateStatuses = datesCovered.map(d => {
+                    const bookings = getWellnessBookingsForDate(d);
+                    const alreadySelfBooked = bookings.some(b => b.empNo === emp.empNo);
+                    const isFull = bookings.length >= 2;
+                    if (isFull || alreadySelfBooked) hasBlockingError = true;
+
+                    const names = bookings.map(b => {
+                        const t = EMPLOYEES.find(x => x.empNo === b.empNo);
+                        return t ? getFullName(t) : b.empNo;
+                    });
+
+                    return { date: d, count: bookings.length, isFull, alreadySelfBooked, names };
+                });
+
+                messagesHtml += `<div class="space-y-1.5 pt-1">`;
+                dateStatuses.forEach(ds => {
+                    if (ds.alreadySelfBooked) {
+                        messagesHtml += `
+                            <div class="flex items-center justify-between text-xs bg-rose-100/80 text-rose-800 px-2.5 py-1.5 rounded-lg font-medium">
+                                <span>${formatDisplayDate(ds.date)}</span>
+                                <span>You already filed on this date</span>
+                            </div>`;
+                    } else if (ds.isFull) {
+                        messagesHtml += `
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs bg-rose-100/80 text-rose-800 px-2.5 py-1.5 rounded-lg font-medium">
+                                <span>${formatDisplayDate(ds.date)} — <strong>2/2 FULL (Not Available)</strong></span>
+                                <span class="text-[11px]">Taken by: ${ds.names.join(', ')}</span>
+                            </div>`;
+                    } else {
+                        messagesHtml += `
+                            <div class="flex items-center justify-between text-xs bg-emerald-100/70 text-emerald-800 px-2.5 py-1.5 rounded-lg font-medium">
+                                <span>${formatDisplayDate(ds.date)} — <strong>Available (${ds.count}/2 slots taken)</strong></span>
+                                <span class="text-[11px]">${ds.names.length ? 'With: ' + ds.names.join(', ') : 'Open'}</span>
+                            </div>`;
+                    }
+                });
+                messagesHtml += `</div>`;
+            } else {
+                messagesHtml += `
+                    <div class="flex items-center gap-2 text-indigo-800 text-xs font-medium">
+                        <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                        <span>${leaveType} covers <strong>${numDays} consecutive calendar days</strong>.</span>
+                    </div>
+                `;
+            }
+
+            previewBox.className = hasBlockingError
+                ? 'rounded-xl border border-rose-300 bg-rose-50/70 p-4 space-y-2 transition-all'
+                : 'rounded-xl border border-emerald-300 bg-emerald-50/50 p-4 space-y-2 transition-all';
+
+            previewBox.innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b ${hasBlockingError ? 'border-rose-200' : 'border-emerald-200'}">
+                    <span class="text-xs font-bold uppercase tracking-wider ${hasBlockingError ? 'text-rose-900' : 'text-emerald-900'}">
+                        Inclusive Period (${numDays} ${numDays === 1 ? 'Day' : 'Days'})
+                    </span>
+                    <span class="text-xs font-extrabold ${hasBlockingError ? 'text-rose-900' : 'text-emerald-900'}">
+                        ${formatDisplayDate(startDate)} ${numDays > 1 ? '→ ' + formatDisplayDate(endDate) : ''}
+                    </span>
+                </div>
+                ${messagesHtml}
+            `;
+
+            submitBtn.disabled = hasBlockingError;
+            lucide.createIcons();
+        }
+
+        // Submit Leave Application
+        function submitLeaveApplication(e) {
+            e.preventDefault();
+            const emp = EMPLOYEES.find(item => item.empNo === currentUser.empNo);
+            const leaveType = document.querySelector('input[name="leaveType"]:checked')?.value;
+            const startDate = document.getElementById('leave-start-date').value;
+            const remarks = document.getElementById('leave-remarks').value.trim();
+
+            if (!startDate) {
+                showToast('Please select a start date.', 'error');
+                return;
+            }
+
+            // Enforce gender rules
+            if (leaveType === 'Maternity Leave' && emp.gender !== 'Female') {
+                showToast('Maternity Leave is only available for Female employees.', 'error');
+                return;
+            }
+            if (leaveType === 'Paternity Leave' && emp.gender !== 'Male') {
+                showToast('Paternity Leave is only available for Male employees.', 'error');
+                return;
+            }
+
+            let numDays = 1;
+            if (leaveType === 'Wellness Leave') {
+                numDays = parseInt(document.querySelector('input[name="wellnessDays"]:checked')?.value || '1', 10);
+                if (![1, 2, 3].includes(numDays)) {
+                    showToast('Wellness Leave must be 1, 2, or 3 days straight.', 'error');
+                    return;
+                }
+            } else if (leaveType === 'Maternity Leave') {
+                numDays = 105;
+            } else if (leaveType === 'Paternity Leave') {
+                numDays = 7;
+            }
+
+            const datesCovered = generateDateRange(startDate, numDays);
+            const endDate = datesCovered[datesCovered.length - 1];
+
+            // Re-verify Wellness Leave rules before saving
+            if (leaveType === 'Wellness Leave') {
+                const wellness = getWellnessCredits(emp.empNo);
+                if (numDays > wellness.remaining) {
+                    showToast(`Insufficient Wellness Leave credits (${wellness.remaining} days remaining).`, 'error');
+                    return;
+                }
+
+                for (const d of datesCovered) {
+                    const existing = getWellnessBookingsForDate(d);
+                    if (existing.some(b => b.empNo === emp.empNo)) {
+                        showToast(`You already have a Wellness Leave filed on ${formatDisplayDate(d)}.`, 'error');
+                        return;
+                    }
+                    if (existing.length >= 2) {
+                        showToast(`Date ${formatDisplayDate(d)} already has 2 teachers on Wellness Leave. Maximum limit reached.`, 'error');
+                        return;
+                    }
+                }
+            }
+
+            const newApp = {
+                id: 'APP-' + Math.floor(1000 + Math.random() * 9000),
+                empNo: emp.empNo,
+                leaveType: leaveType,
+                days: numDays,
+                startDate: startDate,
+                endDate: endDate,
+                datesCovered: datesCovered,
+                remarks: remarks || 'For personal/wellness purpose.',
+                status: 'Pending',
+                filedAt: toISODate(new Date())
+            };
+
+            applications.unshift(newApp);
+            saveApplications();
+
+            // Reset Form
+            document.getElementById('leave-remarks').value = '';
+            document.getElementById('leave-start-date').value = '';
+            document.getElementById('date-preview-box').classList.add('hidden');
+
+            showToast(`${leaveType} (${numDays} day${numDays > 1 ? 's' : ''}) submitted to ${APPROVER.name}!`, 'success');
+            renderTeacherDashboard(emp);
+            lucide.createIcons();
+        }
+
+        // Render Teacher's Own Applications Table
+        function renderMyApplicationsTable(empNo) {
+            const tbody = document.getElementById('my-applications-tbody');
+            const myApps = applications.filter(a => a.empNo === empNo);
+            document.getElementById('my-apps-count-badge').textContent = `${myApps.length} Application${myApps.length === 1 ? '' : 's'}`;
+
+            if (myApps.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-10 text-center text-slate-400 text-sm">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            <p>You have not filed any leave applications yet.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = myApps.map(app => {
+                const statusBadge = getStatusBadgeHtml(app.status);
+                const dateRangeText = app.days === 1
+                    ? formatDisplayDate(app.startDate)
+                    : `${formatDisplayDate(app.startDate)} – ${formatDisplayDate(app.endDate)}`;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 sm:px-6">
+                            <p class="font-bold text-slate-900">${app.leaveType}</p>
+                            <p class="text-xs text-slate-500 truncate max-w-[200px]">${app.remarks}</p>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs sm:text-sm font-medium text-slate-700">
+                            ${dateRangeText}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-bold text-xs text-slate-800">${app.days}</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <p class="text-xs font-semibold text-slate-800">${APPROVER.name}</p>
+                            <p class="text-[11px] text-slate-500">${APPROVER.title}</p>
+                        </td>
+                        <td class="py-3.5 px-4">${statusBadge}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="openSlipModal('${app.id}')" title="View Official Leave Slip"
+                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer">
+                                    <i data-lucide="printer" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="confirmDeleteApplication('${app.id}')" title="Delete Application"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white rounded-lg text-xs font-semibold transition cursor-pointer">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Delete Application Confirmation Modal
+        function confirmDeleteApplication(appId) {
+            const app = applications.find(a => a.id === appId);
+            if (!app) return;
+
+            openModal(`
+                <div class="p-6">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
+                        <i data-lucide="trash-2" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Delete Leave Application?</h3>
+                    <p class="text-sm text-slate-600 mt-1.5">
+                        Are you sure you want to delete your <strong>${app.leaveType}</strong> (${formatDisplayDate(app.startDate)}${app.days > 1 ? ' to ' + formatDisplayDate(app.endDate) : ''})?
+                    </p>
+                    <p class="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3 mt-3">
+                        Deleting this application will immediately restore your leave balance and free up the date slot(s) for other teachers.
+                    </p>
+                    <div class="flex items-center justify-end gap-2.5 mt-6">
+                        <button onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 text-sm font-semibold hover:bg-slate-50 cursor-pointer">Cancel</button>
+                        <button onclick="executeDeleteApplication('${app.id}')" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-sm cursor-pointer">Yes, Delete Application</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function executeDeleteApplication(appId) {
+            applications = applications.filter(a => a.id !== appId);
+            saveApplications();
+            closeModal();
+            showToast('Leave application deleted and credits restored.', 'info');
+            renderApp();
+        }
+
+        // ==================== WELLNESS CALENDAR RENDERING ====================
+        function changeCalendarMonth(delta) {
+            calendarMonth += delta;
+            if (calendarMonth > 11) {
+                calendarMonth = 0;
+                calendarYear++;
+            } else if (calendarMonth < 0) {
+                calendarMonth = 11;
+                calendarYear--;
+            }
+            renderWellnessCalendar();
+            lucide.createIcons();
+        }
+
+        function renderWellnessCalendar() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('calendar-month-label').textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
+
+            const grid = document.getElementById('wellness-calendar-grid');
+            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+            let html = '';
+
+            // Empty cells before 1st day
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="h-12 sm:h-14 rounded-xl bg-slate-50/50"></div>`;
+            }
+
+            // Days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const iso = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const bookings = getWellnessBookingsForDate(iso);
+                const count = bookings.length;
+
+                let cellStyle = 'bg-slate-50 border-slate-200 text-slate-700 hover:border-blue-400';
+                let badgeHtml = `<span class="text-[10px] text-slate-400">0/2</span>`;
+
+                if (count === 1) {
+                    cellStyle = 'bg-amber-50 border-amber-300 text-amber-900 hover:border-amber-500';
+                    badgeHtml = `<span class="text-[10px] font-bold px-1.5 rounded bg-amber-200/80 text-amber-900">1/2</span>`;
+                } else if (count >= 2) {
+                    cellStyle = 'bg-rose-50 border-rose-300 text-rose-900 hover:border-rose-500';
+                    badgeHtml = `<span class="text-[10px] font-bold px-1.5 rounded bg-rose-200 text-rose-900">FULL</span>`;
+                }
+
+                html += `
+                    <button type="button" onclick="inspectCalendarDate('${iso}')"
+                        class="h-12 sm:h-14 rounded-xl border ${cellStyle} p-1.5 flex flex-col items-center justify-between transition cursor-pointer">
+                        <span class="text-xs sm:text-sm font-bold leading-none">${day}</span>
+                        ${badgeHtml}
+                    </button>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function inspectCalendarDate(isoDate) {
+            const bookings = getWellnessBookingsForDate(isoDate);
+            const detailBox = document.getElementById('calendar-day-detail');
+            const displayDate = formatDisplayDate(isoDate);
+
+            // Auto-populate start date if Wellness Leave is selected and slot is available
+            const selectedType = document.querySelector('input[name="leaveType"]:checked')?.value;
+            if (selectedType === 'Wellness Leave' && bookings.length < 2) {
+                document.getElementById('leave-start-date').value = isoDate;
+                updateDatePreview();
+            }
+
+            if (bookings.length === 0) {
+                detailBox.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold text-slate-800">${displayDate}</p>
+                            <p class="text-emerald-700 mt-0.5">0 of 2 slots taken — Both Wellness Leave slots are open.</p>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[11px]">OPEN</span>
+                    </div>
+                `;
+            } else {
+                const namesList = bookings.map(b => {
+                    const emp = EMPLOYEES.find(e => e.empNo === b.empNo);
+                    return `<li>• <strong>${emp ? getFullName(emp) : b.empNo}</strong> (${b.status})</li>`;
+                }).join('');
+
+                const isFull = bookings.length >= 2;
+                detailBox.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="font-bold text-slate-900">${displayDate} (${bookings.length}/2 Slots Taken)</p>
+                            <ul class="mt-1 space-y-0.5 text-slate-700">${namesList}</ul>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-lg ${isFull ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'} font-bold text-[11px] shrink-0">
+                            ${isFull ? '2/2 FULL' : '1 SLOT LEFT'}
+                        </span>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== SCHOOL HEAD (APPROVER) DASHBOARD ====================
+        function switchApproverSubtab(subtab) {
+            const appsPanel = document.getElementById('approver-applications-panel');
+            const rosterPanel = document.getElementById('approver-roster-panel');
+            const btnApps = document.getElementById('subtab-btn-apps');
+            const btnRoster = document.getElementById('subtab-btn-roster');
+
+            if (subtab === 'applications') {
+                appsPanel.classList.remove('hidden');
+                rosterPanel.classList.add('hidden');
+                btnApps.className = 'px-4 py-2.5 rounded-xl bg-white text-deped-navy font-semibold text-xs sm:text-sm shadow-sm transition cursor-pointer';
+                btnRoster.className = 'px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm transition cursor-pointer';
+            } else {
+                rosterPanel.classList.remove('hidden');
+                appsPanel.classList.add('hidden');
+                btnRoster.className = 'px-4 py-2.5 rounded-xl bg-white text-deped-navy font-semibold text-xs sm:text-sm shadow-sm transition cursor-pointer';
+                btnApps.className = 'px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm transition cursor-pointer';
+                renderApproverRoster();
+            }
+        }
+
+        function renderApproverDashboard() {
+            // Update KPI Stats
+            document.getElementById('stat-total-apps').textContent = applications.length;
+            document.getElementById('stat-pending-apps').textContent = applications.filter(a => a.status === 'Pending').length;
+            document.getElementById('stat-approved-apps').textContent = applications.filter(a => a.status === 'Approved').length;
+
+            const statusFilter = document.getElementById('approver-status-filter').value;
+            const typeFilter = document.getElementById('approver-type-filter').value;
+
+            const filtered = applications.filter(app => {
+                const matchStatus = statusFilter === 'ALL' || app.status === statusFilter;
+                const matchType = typeFilter === 'ALL' || app.leaveType === typeFilter;
+                return matchStatus && matchType;
+            });
+
+            const tbody = document.getElementById('approver-applications-tbody');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-10 text-center text-slate-400 text-sm">
+                            No leave applications match the current filter.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(app => {
+                const emp = EMPLOYEES.find(e => e.empNo === app.empNo);
+                const empName = emp ? getFormalName(emp) : app.empNo;
+                const empPos = emp ? emp.position : '';
+                const dateRangeText = app.days === 1
+                    ? formatDisplayDate(app.startDate)
+                    : `${formatDisplayDate(app.startDate)} – ${formatDisplayDate(app.endDate)}`;
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-4 sm:px-6">
+                            <p class="font-bold text-slate-900">${empName}</p>
+                            <p class="text-xs text-slate-500">ID: ${app.empNo} • ${empPos}</p>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="font-semibold text-slate-800">${app.leaveType}</span>
+                            <p class="text-xs text-slate-500 truncate max-w-[180px]">${app.remarks}</p>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs sm:text-sm font-medium text-slate-700">${dateRangeText}</td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-bold text-xs text-slate-800">${app.days}</span>
+                        </td>
+                        <td class="py-3.5 px-4">${getStatusBadgeHtml(app.status)}</td>
+                        <td class="py-3.5 px-4 sm:px-6 text-right">
+                            <div class="inline-flex flex-wrap items-center justify-end gap-1.5">
+                                ${app.status !== 'Approved' ? `
+                                    <button onclick="updateApplicationStatus('${app.id}', 'Approved')"
+                                        class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer">
+                                        Approve
+                                    </button>
+                                ` : ''}
+                                ${app.status !== 'Rejected' ? `
+                                    <button onclick="updateApplicationStatus('${app.id}', 'Rejected')"
+                                        class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition cursor-pointer">
+                                        Reject
+                                    </button>
+                                ` : ''}
+                                <button onclick="openSlipModal('${app.id}')" title="Print / View Official Approval Slip"
+                                    class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer">
+                                    <i data-lucide="printer" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="confirmDeleteApplication('${app.id}')" title="Delete Record"
+                                    class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function updateApplicationStatus(appId, newStatus) {
+            const app = applications.find(a => a.id === appId);
+            if (!app) return;
+            app.status = newStatus;
+            saveApplications();
+            showToast(`Application ${app.id} marked as ${newStatus}.`, newStatus === 'Approved' ? 'success' : 'info');
+            renderApproverDashboard();
+        }
+
+        function renderApproverRoster() {
+            const query = (document.getElementById('roster-search-input')?.value || '').toLowerCase();
+            const tbody = document.getElementById('approver-roster-tbody');
+
+            const filtered = EMPLOYEES.filter(emp =>
+                getFormalName(emp).toLowerCase().includes(query) ||
+                emp.empNo.includes(query) ||
+                emp.position.toLowerCase().includes(query)
+            );
+
+            tbody.innerHTML = filtered.map(emp => {
+                const wellness = getWellnessCredits(emp.empNo);
+                const special = emp.gender === 'Female' ? 'Maternity (105d)' : 'Paternity (7d)';
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3 px-4 sm:px-6 font-mono text-xs font-bold text-blue-700">${emp.empNo}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">${getFormalName(emp)}</td>
+                        <td class="py-3 px-4 text-xs text-slate-600">${emp.position}</td>
+                        <td class="py-3 px-4 text-xs">${emp.gender}</td>
+                        <td class="py-3 px-4 text-center font-semibold text-slate-700">${wellness.used} / 5</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${wellness.remaining > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                ${wellness.remaining} days
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 sm:px-6 text-xs text-slate-600">${special}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==================== OFFICIAL LEAVE SLIP MODAL ====================
+        function openSlipModal(appId) {
+            const app = applications.find(a => a.id === appId);
+            if (!app) return;
+            const emp = EMPLOYEES.find(e => e.empNo === app.empNo);
+
+            openModal(`
+                <div id="print-slip-area" class="p-6 sm:p-8 bg-white">
+                    <div class="text-center border-b-2 border-slate-800 pb-4">
+                        <p class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Republic of the Philippines • Department of Education</p>
+                        <h3 class="text-lg font-extrabold text-slate-900 mt-0.5">PINALUBNGAN NATIONAL HIGH SCHOOL</h3>
+                        <p class="text-xs font-bold uppercase tracking-wider text-blue-800 mt-2">Application for Leave • Reference #${app.id}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 my-5 text-xs">
+                        <div>
+                            <span class="text-slate-400 uppercase block">Employee Name</span>
+                            <span class="font-bold text-slate-900 text-sm">${emp ? getFormalName(emp) : app.empNo}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 uppercase block">Employee Number</span>
+                            <span class="font-mono font-bold text-slate-900 text-sm">${app.empNo}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 uppercase block">Position / Designation</span>
+                            <span class="font-semibold text-slate-800">${emp ? emp.position : 'Teacher'}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 uppercase block">Date Filed</span>
+                            <span class="font-semibold text-slate-800">${formatDisplayDate(app.filedAt)}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Leave Category:</span>
+                            <span class="font-bold text-slate-900">${app.leaveType}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Number of Working/Calendar Days:</span>
+                            <span class="font-bold text-slate-900">${app.days} Day(s)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Inclusive Dates:</span>
+                            <span class="font-bold text-slate-900">${formatDisplayDate(app.startDate)}${app.days > 1 ? ' to ' + formatDisplayDate(app.endDate) : ''}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Application Status:</span>
+                            <span class="font-extrabold uppercase ${app.status === 'Approved' ? 'text-emerald-700' : app.status === 'Rejected' ? 'text-rose-700' : 'text-amber-700'}">${app.status}</span>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200">
+                            <span class="text-slate-500 block">Remarks / Purpose:</span>
+                            <p class="text-slate-800 font-medium mt-0.5">${app.remarks}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-4 grid grid-cols-2 gap-6 text-center text-xs">
+                        <div>
+                            <div class="border-b border-slate-400 pb-1 font-bold text-slate-900">${emp ? getFullName(emp) : ''}</div>
+                            <p class="text-slate-500 mt-1">Applicant Signature</p>
+                        </div>
+                        <div>
+                            <div class="border-b border-slate-400 pb-1 font-bold text-slate-900 uppercase">${APPROVER.name}</div>
+                            <p class="text-slate-600 font-semibold mt-1">${APPROVER.title} (Approver)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-2.5 no-print">
+                    <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-white cursor-pointer">Close</button>
+                    <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-deped-navy hover:bg-blue-900 text-white text-xs font-semibold cursor-pointer">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>Print Leave Slip</span>
+                    </button>
+                </div>
+            `);
+        }
+
+        // ==================== UI HELPERS (BADGES, TOASTS, MODALS) ====================
+        function getStatusBadgeHtml(status) {
+            if (status === 'Approved') {
+                return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Approved</span>`;
+            }
+            if (status === 'Rejected') {
+                return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800"><span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>Rejected</span>`;
+            }
+            return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>`;
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-emerald-900 text-white border-emerald-700',
+                error: 'bg-rose-900 text-white border-rose-700',
+                info: 'bg-slate-900 text-white border-slate-700'
+            };
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg border text-xs sm:text-sm font-medium flex items-center gap-2.5 transform transition-all duration-300 ${colors[type] || colors.info}`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function openModal(htmlContent) {
+            const backdrop = document.getElementById('modal-backdrop');
+            const content = document.getElementById('modal-content');
+            content.innerHTML = htmlContent;
+            backdrop.classList.remove('hidden');
+            backdrop.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            const backdrop = document.getElementById('modal-backdrop');
+            backdrop.classList.add('hidden');
+            backdrop.classList.remove('flex');
+        }
+
+        function confirmResetDemoData() {
+            openModal(`
+                <div class="p-6">
+                    <h3 class="text-lg font-bold text-slate-900">Reset Sample Leave Data?</h3>
+                    <p class="text-sm text-slate-600 mt-1.5">This will restore the default sample leave records for Pinalubngan National High School.</p>
+                    <div class="flex justify-end gap-2.5 mt-6">
+                        <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer">Cancel</button>
+                        <button onclick="resetDemoData()" class="px-4 py-2 rounded-xl bg-deped-navy text-white text-xs font-semibold cursor-pointer">Reset Data</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function resetDemoData() {
+            applications = getSeedApplications();
+            saveApplications();
+            closeModal();
+            showToast('Sample leave data has been reset.', 'info');
+            renderApp();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('modal-backdrop').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Boot Application
+        window.addEventListener('DOMContentLoaded', () => {
+            loadApplications();
+            populateLoginDirectory();
+            renderApp();
+        });
+    </script>
+</body>
+</html>
